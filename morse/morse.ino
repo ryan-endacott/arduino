@@ -1,17 +1,16 @@
 /*
-  Blink
-  Turns on an LED on for one second, then off for one second, repeatedly.
- 
-  This example code is in the public domain.
- */
+  Morse Code
+*/
  
 #include <string.h>
 
+#define A_ASCII_START 65
 
 // Pin 13 has an LED connected on most Arduino boards.
 // give it a name:
 int led = 13;
 
+// Possible morse values
 enum MorseValue {
   dot = 0,
   dash,
@@ -22,6 +21,7 @@ enum MorseValue {
 
 const int morseTimeUnit = 100;
 
+// Time to pulse for each morse character
 const int morseTimes[] = {
   morseTimeUnit, // dot
   morseTimeUnit * 3, // dash
@@ -30,13 +30,35 @@ const int morseTimes[] = {
   morseTimeUnit // eleGap
 };
 
-/*
-const int dotTime = morseTimeUnit;
-const int dashTime = morseTimeUnit * 3;
-const int elementGapTime = morseTimeUnit;
-const int charGapTime = morseTimeUnit * 3;
-const int wordGapTime = morseTimeUnit * 7;
-*/
+// Character conversions for international morse code
+char morseConversion[26][5] = {
+  ".-", // A
+  "-...", // B
+  "-.-.", // C
+  "-..", // D
+  ".", // E
+  "..-.", // F
+  "--.", // G
+  "....", // H
+  "..", // I
+  ".---", // J
+  "-.-", // K
+  ".-..", // L
+  "--", // M
+  "-.", // N
+  "---", // O
+  ".--.", // P
+  "--.-", // Q
+  ".-.", // R
+  "...", // S
+  "-", // T
+  "..-", // U
+  "...-", // V
+  ".--", // W
+  "-..-", // X
+  "-.--", // Y
+  "--.." // Z
+};
 
 // the setup routine runs once when you press reset:
 void setup() {                
@@ -46,16 +68,18 @@ void setup() {
 
 // the loop routine runs over and over again forever:
 void loop() {
-  pulseMorseCode("... --- ...\t"); // Pulse SOS
+  pulseString("SOS");
+  //pulseMorseCode("... --- ...\t"); // Pulse SOS
   delay(2000);               // wait for a second
 }
 
-// pulses a voltage level for the given duration in milliseconds
+// Pulses a voltage level to led for the given duration in milliseconds
 void pulse(int time, int voltage) {
   digitalWrite(led, voltage);
   delay(time);
 }
 
+// Pulse a morse code value to the led.
 void pulseChar(int val) {
   // Keep track of whether last character was a dot or dash so we can pulse
   // an element gap delay if needed
@@ -76,7 +100,7 @@ void pulseChar(int val) {
   }
 }
 
-
+// Pulses a morse code string (... --- ...) to the led
 void pulseMorseCode(char* morse) {
   int strLen = strlen(morse);
   for (int i = 0; i < strLen; i++) {
@@ -94,7 +118,28 @@ void pulseMorseCode(char* morse) {
         pulseChar(wordGap);
         break;
       default:
-        printf("Error: Bad character in morse string: %c", morse[i]);
+        printf("Error: Bad character in morse string: %c\n", morse[i]);
     }
+  }
+}
+
+// Pulses an ascii string to the led in morse code
+void pulseString(char* source) {
+  int strLen = strlen(source);
+  for (int i = 0; i < strLen; i++) {
+
+    if (isalpha(source[i])) {
+      // make sure it's upper because that's how table is calculated
+      int val = toupper(source[i]) - A_ASCII_START;
+      pulseMorseCode(morseConversion[val]);
+      pulseChar(charGap);
+    }
+    else if (source[i] == ' ') {
+      pulseChar(wordGap);
+    }
+    else {
+      printf("Error:  Cannot convert %c to morse code.\n", source[i]);
+    }
+
   }
 }
